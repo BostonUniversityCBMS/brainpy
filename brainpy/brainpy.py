@@ -3,11 +3,17 @@ from __future__ import absolute_import
 import operator
 import re
 
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from math import exp, log, sqrt
 from sys import float_info
 
 from .mass_dict import nist_mass
+from .composition import (
+    SimpleComposition,
+    parse_formula,
+    calculate_mass,
+    _make_isotope_string,
+    _get_isotope)
 
 mz_getter = operator.attrgetter("mz")
 PROTON = nist_mass["H+"][0][0]
@@ -330,56 +336,6 @@ class IsotopicConstants(dict):
         return constants.mass_coefficients.power_sum[order]
 
 
-def calculate_mass(composition, mass_data=None):
-    """Calculates the monoisotopic mass of a composition
-
-    Parameters
-    ----------
-    composition : Mapping
-        Any Mapping type where keys are element symbols and values are integers
-    mass_data : dict, optional
-        A dict with the masses of the chemical elements (the default
-        value is :py:data:`nist_mass`).
-
-    Returns
-    -------
-        mass : float
-    """
-    mass = 0.0
-    if mass_data is None:
-        mass_data = nist_mass
-    for element in composition:
-        try:
-            mass += (composition[element] * mass_data[element][0][0])
-        except KeyError:
-            match = re.search(r"(\S+)\[(\d+)\]", element)
-            if match:
-                element_ = match.group(1)
-                isotope = int(match.group(2))
-                mass += composition[element] * mass_data[element_][isotope][0]
-            else:
-                raise
-    return mass
-
-
-def _make_isotope_string(element, isotope=0):
-    if isotope == 0:
-        return element
-    else:
-        return "%s[%d]" % (element, isotope)
-
-
-def _get_isotope(element_string):
-    if "[" in element_string:
-        match = re.search(r"(\S+)\[(\d+)\]", element_string)
-        if match:
-            element_ = match.group(1)
-            isotope = int(match.group(2))
-            return element_, isotope
-    else:
-        return element_string, 0
-
-
 def max_variants(composition):
     """Calculates the maximum number of isotopic variants that could be produced by a
     composition.
@@ -620,7 +576,7 @@ class IsotopicDistribution(object):
         return tuple(peak_set)
 
 
-def isotopic_variants(composition, n_peaks=None, charge=0, charge_carrier=PROTON):
+def isotopic_variants(composition, npeaks=None, charge=0, charge_carrier=PROTON):
     '''
     Compute a peak list representing the theoretical isotopic cluster for `composition`.
 
@@ -628,7 +584,7 @@ def isotopic_variants(composition, n_peaks=None, charge=0, charge_carrier=PROTON
     ----------
     composition : Mapping
         Any Mapping type where keys are element symbols and values are integers
-    n_peaks: int
+    npeaks: int
         The number of peaks to include in the isotopic cluster, starting from the monoisotopic peak.
         If given a number below 1 or above the maximum number of isotopic variants, the maximum will
         be used. If `None`, a "reasonable" value is chosen by `int(sqrt(max_variants(composition)))`.
@@ -644,14 +600,14 @@ def isotopic_variants(composition, n_peaks=None, charge=0, charge_carrier=PROTON
     :class:`IsotopicDistribution`
 
     '''
-    if n_peaks is None:
+    if npeaks is None:
         max_n_variants = max_variants(composition)
-        n_peaks = int(sqrt(max_n_variants) - 2)
-        n_peaks = max(n_peaks, 3)
+        npeaks = int(sqrt(max_n_variants) - 2)
+        npeaks = max(npeaks, 3)
     else:
         # Monoisotopic Peak is not included
-        n_peaks -= 1
-    return IsotopicDistribution(composition, n_peaks).aggregated_isotopic_variants(
+        npeaks -= 1
+    return IsotopicDistribution(composition, npeaks).aggregated_isotopic_variants(
         charge, charge_carrier=charge_carrier)
 
 

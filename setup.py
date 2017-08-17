@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from setuptools import setup, find_packages, Extension
 import sys
 import traceback
@@ -84,6 +85,7 @@ class ve_build_ext(build_ext):
                 raise BuildFailed()
             raise
 
+
 cmdclass = {}
 
 cmdclass['build_ext'] = ve_build_ext
@@ -98,24 +100,37 @@ def status_msgs(*msgs):
 
 def run_setup(include_cext=True):
     setup(
-        name='brainpy',
-        version='1.0.11',
+        name='brain-isotopic-distribution',
+        version='1.1.0',
         packages=find_packages(),
         description="Fast and efficient theoretical isotopic profile generation",
-        long_description='''
-        A Python Implementation of the Baffling Recursive Algorithm for Isotopic cluster distributioN
+        long_description='''A Python Implementation of the Baffling Recursive Algorithm for Isotopic cluster distributioN.
+
+This package is an implementation of the algorithm originally described in
+    P. Dittwald, J. Claesen, T. Burzykowski, D. Valkenborg, and A. Gambin,
+    "BRAIN: a universal tool for high-throughput calculations of the isotopic distribution for mass spectrometry.",
+    Anal. Chem., vol. 85, no. 4, pp. 1991–4, Feb. 2013.
+
+    H. Hu, P. Dittwald, J. Zaia, and D. Valkenborg,
+    "Comment on 'Computation of isotopic peak center-mass distribution by fourier transform'.",
+    Anal. Chem., vol. 85, no. 24, pp. 12189–92, Dec. 2013.
     ''',
         author=', '.join(["Joshua Klein", "Han Hu"]),
         author_email=["jaklein@bu.edu"],
+        url="https://github.com/mobiusklein/brainpy",
+        maintainer='Joshua Klein',
+        keywords=["isotopic distribution", "isotopic pattern"],
+        maintainer_email="jaklein@bu.edu",
         ext_modules=extensions if include_cext else None,
         include_package_data=True,
         cmdclass=cmdclass,
         classifiers=[
-                'Development Status :: 4 - Beta',
-                'Intended Audience :: Science/Research',
-                'License :: OSI Approved :: BSD License',
-                'Topic :: Scientific/Engineering :: Bio-Informatics']
+            'Development Status :: 4 - Beta',
+            'Intended Audience :: Science/Research',
+            'License :: OSI Approved :: Apache Software License',
+            'Topic :: Scientific/Engineering :: Bio-Informatics']
     )
+
 
 if __name__ == '__main__':
     try:
